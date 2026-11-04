@@ -23,17 +23,17 @@ This repository is the frontend, deployed as a Vite site (for example on Vercel)
 2. Select Vite.
 3. Build command: pnpm build (or npm run build).
 4. Output directory: dist.
-5. Add VITE_API_URL with the public HTTPS URL of the bot API.
-6. Redeploy.
+5. Add the server-side Vercel environment variables BOT_API_URL (the actual Wispbyte bot API URL) and DASHBOARD_URL (this dashboard's deployed origin).
+6. Redeploy. The included Vercel proxy keeps Discord OAuth cookies first-party on the dashboard domain.
 
 ## Configure the bot API
 In the Discord Developer Portal, register this OAuth2 redirect URL:
-https://YOUR-WISPBYTE-BOT-API-URL/auth/callback
+https://YOUR-DASHBOARD.vercel.app/auth/callback
 
 Add these environment variables to the bot host:
 - DISCORD_CLIENT_ID
 - DISCORD_CLIENT_SECRET
-- DASHBOARD_API_URL (public HTTPS base URL, no trailing slash)
+- DASHBOARD_API_URL (the same deployed dashboard origin; OAuth callback is proxied through Vercel)
 - DASHBOARD_URL (exact deployed dashboard origin)
 - DASHBOARD_SESSION_SECRET (long random secret, at least 32 characters)
 - DASHBOARD_PORT (public port allocated to the bot service)
