@@ -51,7 +51,7 @@ Keep DISCORD_TOKEN, MONGODB_URI and MONGODB_DB configured. Never put secrets in 
 8. Applicants submit the modal; the bot stores the application in MongoDB and posts it for staff review.
 
 ## Current scope
-The prefix and application panel flows are connected. Moderation and clan screens remain interface scaffolding; those settings are not yet wired to the API. Clan actions, moderation actions, audit history and web-based application review are not implemented in this build. Existing bot slash commands remain available.
+The prefix, moderation configuration, clan configuration and application panel flows are connected. Actual moderation actions, clan actions, audit history and web-based accept/reject review are not implemented in this build; those actions remain available through the bot commands and Discord review buttons. Existing bot slash commands remain available.
 
 ## Local development
 pnpm install

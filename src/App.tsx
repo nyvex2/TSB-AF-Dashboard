@@ -25,10 +25,11 @@ export default function App() {
   const [apiError,setApiError] = useState("");
   const [extraConfig,setExtraConfig] = useState<Record<string,string>>({});
   const extraKeys=["logChannelId","blacklistLogChannelId","applicationChannelId","clanRegistrationChannelId","clanMainLogChannelId","lfClanChannelId","staffRoleId","blacklistPermsRoleId","blacklistRoleId","jailRoleId","tryoutHostRoleId","clanLeaderRoleId","clanMainerRoleId","clanBlacklistRoleId"];
+  const active = apps.find(a=>a.id===selected) ?? apps[0];
   useEffect(()=>{ fetch(API_BASE+"/api/me",{credentials:"include"}).then(async r=>{if(!r.ok)throw new Error("not connected");return r.json()}).then(d=>{setDiscordUser(d.user||"");setGuilds(d.guilds||[]);if(d.guilds?.length)setGuildId(d.guilds[0].id)}).catch(()=>{}); },[]);
   useEffect(()=>{ if(!guildId)return; setLoading(true); fetch(API_BASE+"/api/guilds/"+guildId+"/config",{credentials:"include"}).then(async r=>{if(!r.ok)throw new Error(await r.text());return r.json()}).then(c=>{setServerName(c.guildName||"Discord server");setPrefix(c.prefix||",");setExtraConfig(Object.fromEntries(extraKeys.map(k=>[k,c[k]||""])));if(Array.isArray(c.dashboardApplications)){const loaded=c.dashboardApplications.map((a:any,i:number)=>({...a,id:Number(a.id)||i+1,questions:(a.questions||[]).map((q:any,j:number)=>({...q,id:Date.now()+j}))}));setApps(loaded);setSelected(loaded[0]?.id||0)} }).catch(e=>setApiError(String(e.message||e))).finally(()=>setLoading(false)); },[guildId]);
   const saveAll = async () => {
-    if(!guildId){setSaved(true);setTimeout(()=>setSaved(false),1800);return}
+    if(!guildId){setApiError("Connect Discord and select a server before saving.");return}
     setLoading(true);setApiError("");
     try { const payload={...extraConfig,prefix,dashboardApplications:apps.map(a=>({...a,id:String(a.id),questions:a.questions.map(q=>({label:q.label,required:q.required}))}))};
       const r=await fetch(API_BASE+"/api/guilds/"+guildId+"/config",{method:"PUT",credentials:"include",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
@@ -41,7 +42,6 @@ export default function App() {
     try{const r=await fetch(API_BASE+"/api/guilds/"+guildId+"/applications/"+active.id+"/publish",{method:"POST",credentials:"include"});const raw=await r.text();let d:any={};try{d=JSON.parse(raw)}catch{d={message:raw}}if(!r.ok)throw new Error(d.message||d.error||"Publish failed");setApiError("Published in #"+(d.channel||active.panelChannel));}
     catch(e:any){setApiError(e.message||"Could not publish panel.");}finally{setLoading(false)}
   };
-  const active = apps.find(a=>a.id===selected) ?? apps[0];
   const update = (patch: Partial<Application>) => setApps(old=>old.map(a=>a.id===selected?{...a,...patch}:a));
   const filtered = useMemo(()=>apps.filter(a=>a.name.toLowerCase().includes(query.toLowerCase())),[apps,query]);
   const createApp = () => { const id=Math.max(0,...apps.map(a=>a.id))+1; const item:Application={id,name:"New application",description:"Describe this application.",panelTitle:"New application",panelDescription:"Complete the form to apply.",buttonText:"Apply",color:"#d6a64b",panelChannel:"#applications",reviewChannel:"#staff-review",staffRole:"@Staff",enabled:false,questions:[{id:Date.now(),label:"Your answer",required:true}]}; setApps(old=>[...old,item]);setSelected(id);setTab("applications"); };
