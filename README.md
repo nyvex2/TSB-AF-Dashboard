@@ -16,14 +16,14 @@ Standalone React + TypeScript + Vite dashboard for the TSB-AF Discord bot.
 - Application submissions stored in MongoDB and reviewed through the bot's existing accept/reject workflow.
 
 ## Architecture
-This repository is the frontend, deployed as a Vite site (for example on Vercel). The bot-side API runs in the existing Python bot process and uses its MongoDB state. The browser never receives the Discord bot token, OAuth client secret, MongoDB URI or session signing secret.
+This repository is the frontend, deployed as a Vite site (for example on Vercel). The bot-side API runs in the existing Python bot process and uses its MongoDB state. The browser never receives the Discord bot token, OAuth client secret, MongoDB URI or session signing secret. The Vercel proxy forwards the browser's original Origin header so cross-site state-changing requests are rejected.
 
 ## Deploy the dashboard
 1. Import this repository into Vercel.
 2. Select Vite.
 3. Build command: pnpm build (or npm run build).
 4. Output directory: dist.
-5. Add the server-side Vercel environment variables BOT_API_URL (the actual Wispbyte bot API URL) and DASHBOARD_URL (this dashboard's deployed origin).
+5. Add the server-side Vercel environment variable BOT_API_URL (the actual Wispbyte bot API URL).
 6. Redeploy. The included Vercel proxy keeps Discord OAuth cookies first-party on the dashboard domain.
 
 ## Configure the bot API

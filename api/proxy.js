@@ -2,6 +2,7 @@ export default async function handler(req, res) {
   const upstream = process.env.BOT_API_URL;
   if (!upstream) return res.status(503).json({ error: "BOT_API_URL is not configured in Vercel." });
   const path = Array.isArray(req.query.path) ? req.query.path.join("/") : String(req.query.path || "");
+  if (!path.startsWith("api/") && !path.startsWith("auth/")) return res.status(404).json({ error: "Unknown proxy route." });
   const target = new URL(path.replace(/^\/+/, ""), upstream.replace(/\/+$/, "") + "/");
   for (const [key, value] of Object.entries(req.query)) {
     if (key === "path" || value === undefined) continue;
@@ -12,7 +13,6 @@ export default async function handler(req, res) {
     if (!value || ["host", "connection", "content-length"].includes(key.toLowerCase())) continue;
     headers.set(key, Array.isArray(value) ? value.join(",") : String(value));
   }
-  headers.set("origin", process.env.DASHBOARD_URL || ("https://" + req.headers.host));
   let body;
   if (!["GET", "HEAD"].includes(req.method || "GET")) {
     if (req.body !== undefined && req.body !== null) {
