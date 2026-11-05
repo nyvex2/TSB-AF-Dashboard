@@ -1,61 +1,86 @@
-# TSB-AF Dashboard
+# TSB-AF Moderation Bot — Python
 
-Standalone React + TypeScript + Vite dashboard for the TSB-AF Discord bot.
+Python rewrite of the TSB-AF Discord moderation, applications, clan registration and tryout-stage bot. Built with `discord.py`.
 
-## Implemented
-- Discord OAuth2 sign-in.
-- Server access limited to users with Manage Server or Administrator permission, where the bot is installed.
-- Signed HTTP-only dashboard session cookie.
-- Per-server prefix configuration sync.
-- Up to 25 independent application panels.
-- Custom embed title, description, color and button label.
-- Up to five Discord modal questions per panel (Discord platform limit).
-- Separate panel channel, review channel and reviewer role.
-- Publish or update application embeds directly in Discord.
-- Persistent application buttons restored after bot restart.
-- Application submissions stored in MongoDB and reviewed through the bot's existing accept/reject workflow.
+## Features
+- `/blacklist`, `/unblacklist`, `/blcheck` with cyan embeds, case history, automatic jail role, nickname tagging and channel allowlist
+- `/say` and `/embed-say`
+- `/stage` restricted to configured tryout hosts; creates and assigns a stage role
+- `/apply` DM questionnaire with staff Accept/Reject buttons
+- `/clan-register` DM invite submission, owner verification, 30-member minimum and staff review
+- `/main` one-time clan code redemption and announcement
+- `/config` settings and `/config-show`
+- MongoDB Atlas persistence for restarts and host changes
 
-## Architecture
-This repository is the frontend, deployed as a Vite site (for example on Vercel). The bot-side API runs in the existing Python bot process and uses its MongoDB state. The browser never receives the Discord bot token, OAuth client secret, MongoDB URI or session signing secret. The Vercel proxy forwards the browser's original Origin header so cross-site state-changing requests are rejected.
+## Wispbyte setup
+1. Create a **Python** server and connect this repository.
+2. Install dependencies from `requirements.txt` (Wispbyte can run `pip install -r requirements.txt`).
+3. Set the startup command to `python main.py`.
+4. Add these environment variables in the host panel:
+   - `DISCORD_TOKEN` — bot token
+   - `DISCORD_CLIENT_ID` — Discord application ID (optional for runtime; useful for setup)
+   - `DISCORD_GUILD_ID` — optional test server ID for instant guild slash-command sync; omit for global commands
+   - `MONGODB_URI` — MongoDB Atlas connection string
+   - `MONGODB_DB` — database name, defaults to `tsbaf`
+5. Enable **Server Members Intent** and **Message Content Intent** in the Discord Developer Portal.
+6. Invite the bot with `bot` and `applications.commands` scopes and permissions to manage roles, send messages, embed links, view channels and read message history. Put the bot role above the stage/blacklist roles it must manage.
+7. Start the server. Slash commands sync automatically on startup.
 
-## Deploy the dashboard
-1. Import this repository into Vercel.
-2. Select Vite.
-3. Build command: pnpm build (or npm run build).
-4. Output directory: dist.
-5. Add the server-side Vercel environment variable BOT_API_URL (the actual Wispbyte bot API URL).
-6. Redeploy. The included Vercel proxy keeps Discord OAuth cookies first-party on the dashboard domain.
+## Commands
+- `/blacklist user reason`
+- `/unblacklist user`
+- `/blcheck user`
+- `/say message channel`
+- `/embed-say title description color channel`
+- `/stage user stage power rank`
+- `/apply`
+- `/clan-register`
+- `/main code`
+- `/config logs|applications|staff-role|blacklist-role|jail-setup|jail-channel|jail-channel-remove|tryout-role|clan-register-logs|clan-news|questions`
+- `/config-show`
 
-## Configure the bot API
-In the Discord Developer Portal, register this OAuth2 redirect URL:
-https://YOUR-DASHBOARD.vercel.app/auth/callback
+### Jail setup
+1. Run `/config jail-setup` to create or refresh the `Blacklisted` role and restrict it from every server channel.
+2. Run `/config jail-channel channel:#rules` for each channel jailed members may access (for example, rules, appeals, or a jail chat).
+3. Use `/config jail-channel-remove` to revoke access to a channel.
+4. `/config-show` displays the current jail role and allowed channels.
 
-Add these environment variables to the bot host:
-- DISCORD_CLIENT_ID
-- DISCORD_CLIENT_SECRET
-- DASHBOARD_API_URL (the same deployed dashboard origin; OAuth callback is proxied through Vercel)
-- DASHBOARD_URL (exact deployed dashboard origin)
-- DASHBOARD_SESSION_SECRET (long random secret, at least 32 characters)
-- DASHBOARD_PORT (public port allocated to the bot service)
+The bot saves each member's previous nickname and restores it when `/unblacklist` is used. The bot needs **Manage Roles**, **Manage Channels**, and **Manage Nicknames**, and its highest role must be above the members it moderates. Make sure the configured allowed channels are safe for jailed members to access.
 
-Keep DISCORD_TOKEN, MONGODB_URI and MONGODB_DB configured. Never put secrets in this repository or in VITE_* variables. Restart the bot after adding the variables. The host must expose the selected API port publicly over HTTPS.
+## Persistence and security
+All state is stored in MongoDB Atlas, not in GitHub or on the host disk. This keeps records across restarts and host changes as long as the same MongoDB database is used. Never commit your real Discord token or MongoDB URI; use host environment variables. The `.env` file is ignored by Git.
 
-## Publish an application
-1. Sign in with Discord.
-2. Select a server where you have Manage Server or Administrator and the bot is installed.
-3. Open Applications and create or edit a panel.
-4. Set the panel channel, review channel and reviewer role using exact Discord names.
-5. Add 1–5 questions.
-6. Enable the panel and save changes.
-7. Click Publish embed. The bot posts the embed and persistent Apply button.
-8. Applicants submit the modal; the bot stores the application in MongoDB and posts it for staff review.
 
-## Current scope
-The prefix, moderation configuration, clan configuration and application panel flows are connected. Actual moderation actions, clan actions, audit history and web-based accept/reject review are not implemented in this build; those actions remain available through the bot commands and Discord review buttons. Existing bot slash commands remain available.
+## Prefix moderation commands
 
-## Local development
-pnpm install
-pnpm dev
+The default text-command prefix is a comma (,). The bot also accepts command shortcuts:
 
-Build:
-pnpm build
+- ,b @user reason — ban; ,ub user_id — unban
+- ,k @user reason — kick
+- ,to @user 10m reason — timeout; ,uto @user — remove timeout
+- ,w @user reason — warn; ,ws @user — view warnings; ,cw @user — clear warnings
+- ,p 25 — purge; ,sm 5 — set slowmode
+- ,l / ,ul — lock / unlock the current channel
+- ,bl @user reason / ,unbl @user / ,blcheck @user
+- ,h — show the moderation help
+
+Full command names also work, for example ,timeout and ,ban. Use ,setprefix ! if you want to change the prefix. Prefix moderation commands require the appropriate staff permissions, and the bot needs the corresponding Discord permissions.
+
+
+## Clan moderation and recruitment
+
+- `/config clan-blacklist-role role:@Role` configures the role assigned to every active mainer of a blacklisted clan. Staff use `/blacklist-clan clan:<name-or-server-id> reason:<reason>` and `/unblacklist-clan clan:<name-or-server-id>`. Blacklisted clans cannot be mained.
+- `/clan-mainers clan:<clan>` is public: anyone can select any accepted clan from searchable autocomplete and view its active mainers. `/clan-remove-mainer member:@Member` remains restricted to that clan's owner; other clan memberships are preserved.
+- `/config lfclan-channel channel:#channel` configures the recruitment channel. Members use `/lfclan kills:<number> device:<PC/Mobile/Console/Other>`; the bot reads their stage, power, and rank from their configured roles.
+- All `/config` commands, including `/config-show`, require the Discord Administrator permission. Prefix `,setprefix` is Administrator-only. Moderation commands check the corresponding Discord permission (Ban Members, Kick Members, Moderate Members, Manage Messages, Manage Channels, Manage Nicknames, or Manage Roles) or the configured staff role/admin access.
+
+Clan main records retain history; leader removals mark a membership inactive rather than deleting its historical record.
+
+
+### Slash-command response timing
+Commands that perform slower Discord API work defer their interaction response first, so Discord shows that the bot is processing instead of timing out before the operation completes.
+
+
+## Dashboard API
+
+The separate TSB-AF-Dashboard repository can connect to this bot through the optional dashboard API. See DASHBOARD_SETUP.md for OAuth2, Wispbyte port, and Vercel configuration. Existing bot setup and commands above remain unchanged.
