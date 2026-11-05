@@ -1,6 +1,6 @@
-# TSB-AF Moderation Bot — Python
+# TSBAF Moderation Bot — Python
 
-Python rewrite of the TSB-AF Discord moderation, applications, clan registration and tryout-stage bot. Built with `discord.py`.
+Python rewrite of the TSBAF Discord moderation, applications, clan registration and tryout-stage bot. Built with `discord.py`.
 
 ## Features
 - `/blacklist`, `/unblacklist`, `/blcheck` with cyan embeds, case history, automatic jail role, nickname tagging and channel allowlist
@@ -83,4 +83,4 @@ Commands that perform slower Discord API work defer their interaction response f
 
 ## Dashboard API
 
-The separate TSB-AF-Dashboard repository can connect to this bot through the optional dashboard API. See DASHBOARD_SETUP.md for OAuth2, Wispbyte port, and Vercel configuration. Existing bot setup and commands above remain unchanged.
+The separate TSBAF-Dashboard repository can connect to this bot through the optional dashboard API. See DASHBOARD_SETUP.md for OAuth2, Wispbyte port, and Vercel configuration. Existing bot setup and commands above remain unchanged.
