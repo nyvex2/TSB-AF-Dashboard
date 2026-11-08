@@ -47,7 +47,7 @@ export default function App() {
   };
   const update = (patch: Partial<Application>) => setApps(old=>old.map(a=>a.id===selected?{...a,...patch}:a));
   const filtered = useMemo(()=>apps.filter(a=>a.name.toLowerCase().includes(query.toLowerCase())),[apps,query]);
-  const createApp = () => { const id=Math.max(0,...apps.map(a=>a.id))+1; const item:Application={id,name:"New application",description:"Describe this application.",panelTitle:"New application",panelDescription:"Complete the form to apply.",buttonText:"Apply",color:"#22d3ee",panelChannel:"",reviewChannel:"",staffRole:"",acceptedRole:"",enabled:false,questions:[{id:Date.now(),label:"Your answer",required:true}]}; setApps(old=>[...old,item]);setSelected(id);setTab("applications"); };
+  const createApp = () => { const id=Math.max(0,...apps.map(a=>a.id))+1; const item:Application={id,name:"New application",description:"Describe this application.",panelTitle:"New application",panelDescription:"Complete the form to apply.",buttonText:"Apply",color:"#8b5cf6",panelChannel:"",reviewChannel:"",staffRole:"",acceptedRole:"",enabled:false,questions:[{id:Date.now(),label:"Your answer",required:true}]}; setApps(old=>[...old,item]);setSelected(id);setTab("applications"); };
   const removeApp = () => { if(!active || !window.confirm("Delete this application panel?")) return; const next=apps.filter(a=>a.id!==selected);setApps(next);setSelected(next[0]?.id??0); };
   const addQuestion = () => update({questions:[...active.questions,{id:Date.now(),label:"New question",required:true}]});
   const changeQuestion = (id:number,patch:Partial<Question>) => update({questions:active.questions.map(q=>q.id===id?{...q,...patch}:q)});
